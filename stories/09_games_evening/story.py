@@ -1,3 +1,4 @@
+
 """The Hostel Games Evening — a complete Weeks 1–6 story.
 Run: python3 story.py. All numbers and events are invented for learning.
 """
@@ -50,6 +51,23 @@ class FootballGame(GameChoice):
 
     def credit_cost(self):
         return self.rounds * 3
+
+
+# FOUNDATION TASK 1: RacingGame — a new concrete game choice.
+# It follows the same interface as FootballGame and LudoRound.
+class RacingGame(GameChoice):
+    def __init__(self, races):
+        # Accept only positive whole numbers; bool is rejected because
+        # bool is a subclass of int in Python.
+        if not isinstance(races, int) or isinstance(races, bool) or races <= 0:
+            raise ValueError("Races must be a positive whole number.")
+
+        super().__init__("Racing game")  # Reuse GameChoice's constructor.
+        self.races = races  # Store the number of races for this game.
+
+    def credit_cost(self):
+        # Each race costs 2 credits.
+        return self.races * 2
 
 
 class LudoRound(GameChoice):  # Siblings show hierarchical inheritance.
@@ -117,21 +135,37 @@ def show_choices(choices):
 def main():
     print("=== THE HOSTEL GAMES EVENING ===")
     print("Achen is running a hostel games evening. The group has limited game credits and many challengers.")
-    choices = [FootballGame(), LudoRound("Ludo round"),
-               FeaturedPractice(), CheeringContest()]
-    show_choices(choices)  # Includes an unrelated duck-typed guest.
+
+    # The new RacingGame(3) demonstrates three races costing 6 credits.
+    choices = [
+        FootballGame(),
+        LudoRound("Ludo round"),
+        FeaturedPractice(),
+        CheeringContest(),
+        RacingGame(3),
+    ]
+
+    show_choices(choices)  # Includes an unrelated duck-typed guest and RacingGame.
+
     session = GamesEvening("Achen", 10)
     other = GamesEvening("Alex", 10)
+
     print(session.play(choices[2]))
     print(session.play(choices[0]))
     print(session.play(choices[0]))  # Eventually the same request will not fit.
     print(session.play(choices[3]))
     print(other.play(choices[1]))
+
+    # Demonstrate that RacingGame works with the existing play() method.
+    print(session.play(choices[4]))
+
     print(f"{session.student}: {session.credits.remaining:,} credits; completed: {session.completed_count}")
     print(f"{other.student}: {other.credits.remaining:,} credits; completed: {other.completed_count}")
+
     print("MRO (method lookup order):")
     for parent in FeaturedPractice.__mro__:
         print(parent.__name__)
+
     print("Ending: Everyone has a turn, and the credit counter still tells the truth.")
 
 
