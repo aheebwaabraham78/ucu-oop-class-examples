@@ -44,6 +44,104 @@ class RacingGame(GameChoice):
 
     def credit_cost(self):
         return self.races * 2
+# ============================================================
+# LATER TOPIC A3: JSON save/load
+# ============================================================
+
+def game_to_dict(game):
+    """Convert a game into a JSON-compatible dictionary."""
+
+    if isinstance(game, RacingGame):
+        return {"type": "racing", "races": game.races}
+
+    if isinstance(game, TriviaFromMemory):
+        return {"type": "trivia", "questions": game.questions}
+
+    if isinstance(game, QuickPractice):
+        return {"type": "practice", "minutes": game.minutes}
+
+    if type(game) is GameChoice:
+        return {
+            "type": "basic",
+            "name": game.name,
+            "credits": game.credits,
+        }
+
+    raise TypeError(f"Unsupported game type: {type(game).__name__}")
+
+
+def game_from_dict(data):
+    """Validate a JSON game record and recreate its game."""
+
+    if not isinstance(data, dict):
+        raise ValueError("Each game record must be an object.")
+
+    game_type = data.get("type")
+
+    try:
+        if game_type == "racing":
+            return RacingGame(data["races"])
+
+        if game_type == "trivia":
+            return TriviaFromMemory(data["questions"])
+
+        if game_type == "practice":
+            return QuickPractice(data["minutes"])
+
+        if game_type == "basic":
+            return GameChoice(data["name"], data["credits"])
+
+    except KeyError as error:
+        raise ValueError(f"Missing required game field: {error}") from error
+
+    raise ValueError(f"Unknown game type: {game_type}")
+
+
+def save_evening(evening, filename="games_evening.json"):
+    """Save a games evening to JSON."""
+
+    if not isinstance(evening, GamesEvening):
+        raise TypeError("Expected a GamesEvening object.")
+
+    data = {
+        "title": evening.title,
+        "choices": [game_to_dict(game) for game in evening.choices],
+        "history": evening.history,
+    }
+
+    path = Path(filename)
+    path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    return path
+
+
+def load_evening(filename="games_evening.json"):
+    """Load a games evening from JSON."""
+
+    path = Path(filename)
+    data = json.loads(path.read_text(encoding="utf-8"))
+
+    if not isinstance(data, dict):
+        raise ValueError("Saved evening must be a JSON object.")
+
+    title = data.get("title")
+    choices = data.get("choices")
+    history = data.get("history", [])
+
+    if not isinstance(title, str):
+        raise ValueError("Saved title must be text.")
+
+    if not isinstance(choices, list):
+        raise ValueError("Saved choices must be a list.")
+
+    if not isinstance(history, list) or not all(
+        isinstance(item, str) for item in history
+    ):
+        raise ValueError("Saved history must contain text entries.")
+
+    evening = GamesEvening(title)
+    evening.choices = [game_from_dict(item) for item in choices]
+    evening.history = history
+    return evening
 
 
 # ============================================================
