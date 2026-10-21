@@ -73,7 +73,24 @@ class GameCredits:
 
         self.amount -= amount
         return True
-        
+   ============================================================
+
+class TriviaFromMemory(GameChoice):
+    """A trivia game with a specified number of questions."""
+
+    def __init__(self, questions):
+        if (
+            not isinstance(questions, int)
+            or isinstance(questions, bool)
+            or questions <= 0
+        ):
+            raise ValueError("Questions must be a positive integer.")
+
+        super().__init__("Trivia from Memory")
+        self.questions = questions
+
+    def credit_cost(self):
+        return self.questions      
 # ============================================================
 # LATER TOPIC A3: JSON save/load
 # ============================================================
