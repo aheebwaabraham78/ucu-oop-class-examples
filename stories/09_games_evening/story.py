@@ -44,6 +44,36 @@ class RacingGame(GameChoice):
 
     def credit_cost(self):
         return self.races * 2
+
+# ============================================================
+# FOUNDATION TASK 2: GameCredits.add_more(amount)
+# ============================================================
+
+class GameCredits:
+    """Manage the credits available to a player."""
+
+    def __init__(self, amount=0):
+        if not isinstance(amount, int) or isinstance(amount, bool) or amount < 0:
+            raise ValueError("Initial credits must be non-negative.")
+        self.amount = amount
+
+    def add_more(self, amount):
+        if not isinstance(amount, int) or isinstance(amount, bool) or amount <= 0:
+            raise ValueError("Amount must be a positive integer.")
+
+        self.amount += amount
+        return self.amount
+
+    def spend(self, amount):
+        if not isinstance(amount, int) or isinstance(amount, bool) or amount < 0:
+            raise ValueError("Spending amount must be non-negative.")
+
+        if amount > self.amount:
+            return False
+
+        self.amount -= amount
+        return True
+        
 # ============================================================
 # LATER TOPIC A3: JSON save/load
 # ============================================================
