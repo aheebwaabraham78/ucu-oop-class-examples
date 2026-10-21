@@ -1,139 +1,198 @@
-"""The Hostel Games Evening — a complete Weeks 1–6 story.
-Run: python3 story.py. All numbers and events are invented for learning.
+"""The Hostel Games Evening
+Group 3 / Catch-up Group C3
 """
-from abc import ABC, abstractmethod
+
+import json
+from pathlib import Path
 
 
-# ACT 1: The resource owns its value and the rules for changing it.
-class GameCredits:
-    def __init__(self, amount):
-        self.remaining = amount  # Starting values go through the setter too.
+# ============================================================
+# FOUNDATION TASK 1: RacingGame
+# ============================================================
 
-    @property
-    def remaining(self):
-        return self.__remaining  # Name mangling, not a security lock.
+class GameChoice:
+    """Base class for games available at the hostel."""
 
-    @remaining.setter
-    def remaining(self, amount):
-        if amount < 0:
-            raise ValueError("Remaining credits cannot be negative.")
-        self.__remaining = amount
+    def __init__(self, name, credits=2):
+        if not isinstance(name, str) or not name.strip():
+            raise ValueError("Game name must not be empty.")
+        if not isinstance(credits, int) or isinstance(credits, bool) or credits < 0:
+            raise ValueError("Credits must be a non-negative integer.")
 
-    def use(self, amount):
-        if amount <= 0 or amount > self.remaining:
-            return False  # Refuse before changing state.
-        self.remaining = self.remaining - amount
-        return True
-
-
-# ACT 2: The abstract family says what every concrete choice must provide.
-class GameChoice(ABC):
-    unit = "credits"  # Class attribute; every instance has its own name.
-
-    def __init__(self, name):
         self.name = name
-
-    def describe(self):
-        return f"{self.name} needs {self.credit_cost():,} {self.unit}."
-
-    @abstractmethod
-    def credit_cost(self):
-        pass
-
-
-class FootballGame(GameChoice):
-    def __init__(self, rounds=2):
-        if not isinstance(rounds, int) or isinstance(rounds, bool) or rounds <= 0:
-            raise ValueError("Rounds must be a positive whole number.")
-        super().__init__("Football game")
-        self.rounds = rounds
+        self.credits = credits
 
     def credit_cost(self):
-        return self.rounds * 3
+        return self.credits
+
+    def play(self):
+        return f"{self.name} was played successfully."
+
+    def __str__(self):
+        return f"{self.name} ({self.credit_cost()} credits)"
 
 
-class LudoRound(GameChoice):  # Siblings show hierarchical inheritance.
-    def credit_cost(self):
-        return 2
+class RacingGame(GameChoice):
+    """A racing game costs two credits per race."""
 
+    def __init__(self, races):
+        if not isinstance(races, int) or isinstance(races, bool) or races <= 0:
+            raise ValueError("Races must be a positive integer.")
 
-class PracticeGame(FootballGame):  # A third level in the same family.
-    def __init__(self, rounds=2):
-        super().__init__(rounds)
-        self.name = "Practice football game"
-
-    def credit_cost(self):
-        return super().credit_cost() // 2  # Reuse, then specialise, the parent's calculation.
-
-
-# ACT 3: Multiple inheritance adds a small descriptive ability.
-class GamesHype:
-    def describe(self):
-        return f"Controllers ready! {super().describe()}"
-
-
-class FeaturedPractice(GamesHype, PracticeGame):
-    pass  # The full hierarchy combines multiple and multilevel inheritance.
-
-
-class CheeringContest:  # No shared parent: callers use its matching behaviour.
-    name = "Cheering contest"
+        super().__init__("Racing game")
+        self.races = races
 
     def credit_cost(self):
-        return 0
-
-    def describe(self):
-        return "Cheering contest: 0 credits in this classroom model."
+        return self.races * 2
 
 
-# ACT 4: The coordinator HAS-A resource, and USES-A chosen object.
-class GamesEvening:
-    def __init__(self, student, amount):
-        self.student = student
-        self.credits = GameCredits(amount)  # Owned part: composition.
-        self._entries = []  # Internal by convention; fresh for every instance.
+# ============================================================
+# LATER TOPIC A4: Factory and Single Responsibility Principle
+# ============================================================
 
-    @property
-    def completed_count(self):
-        return len(self._entries)  # Read-only: it reflects actual history.
+class GameFactory:
+    """Create game objects based on a requested type."""
 
-    def play(self, choice):
-        needed = choice.credit_cost()  # Each choice knows its own calculation.
-        if needed < 0:
-            return "Invalid negative requirement. Nothing recorded."
-        if needed == 0 or self.credits.use(needed):
-            # Save the quoted cost now: later edits to the choice cannot change it.
-            self._entries.append({"choice": choice, "cost": needed})
-            return f"{self.student} completes {choice.name}: {needed:,} credits."
-        return f"Not enough credits for {choice.name}. Nothing recorded."
+    @staticmethod
+    def create(game_type, **kwargs):
+        if not isinstance(game_type, str):
+            raise ValueError("Game type must be text.")
+
+        game_type = game_type.lower()
+
+        if game_type == "racing":
+            return RacingGame(**kwargs)
+
+        if game_type == "trivia":
+            return TriviaFromMemory(**kwargs)
+
+        if game_type == "practice":
+            return QuickPractice(**kwargs)
+
+        if game_type == "basic":
+            return GameChoice(**kwargs)
+
+        raise ValueError(f"Unknown game type: {game_type}")
 
 
-def show_choices(choices):
-    for choice in choices:
-        print(choice.describe())  # Same call, different implementations.
+def display_summary(evening):
+    """Display the summary without managing game state."""
+    print(evening.summary())
 
 
-# ACT 5: A complete story, including a refusal and independent object state.
+# ============================================================
+# DEMONSTRATIONS OF THE FOUNDATION TASKS
+# ============================================================
+
+def demo_foundation_tasks():
+    print("\n=== FOUNDATION TASK 1: RACING GAME ===")
+    racing = RacingGame(3)
+    print(racing)
+    print(f"Races: {racing.races}")
+    print(f"Credits required: {racing.credit_cost()}")
+
+    print("\n=== FOUNDATION TASK 2: GAME CREDITS ===")
+    wallet = GameCredits(5)
+    wallet.add_more(5)
+    print(f"Credits after adding: {wallet.amount}")
+
+    print("\n=== FOUNDATION TASK 3: TRIVIA ===")
+    trivia = TriviaFromMemory(4)
+    print(trivia)
+    print(f"Questions: {trivia.questions}")
+
+    print("\n=== FOUNDATION TASK 4: AFFORDABLE GAMES ===")
+    practice = QuickPractice(10)
+    games = [racing, trivia, practice, GameChoice("Ludo", 2)]
+
+    for game in affordable(games, 4):
+        print(game)
+
+    print("\n=== FOUNDATION TASK 5: EVENING SUMMARY ===")
+    evening = GamesEvening()
+    evening.complete_bundle(games)
+    display_summary(evening)
+
+    print("\n=== FOUNDATION TASK 6: QUICK PRACTICE ===")
+    print(practice)
+    print(f"Practice duration: {practice.minutes} minutes")
+
+    print("\n=== FOUNDATION TASK 7: CANCEL LAST GAME ===")
+    removed = evening.cancel_last()
+    print(f"Cancelled: {removed.name if removed else 'Nothing to cancel'}")
+
+    print("\n=== FOUNDATION TASK 8: COMPLETE BUNDLE ===")
+    evening.complete_bundle([GameChoice("Football", 3)])
+    display_summary(evening)
+
+
+# ============================================================
+# DEMONSTRATIONS OF SELECTED LATER TOPICS
+# ============================================================
+
+def demo_a2_safe_play():
+    print("\n=== A2: CUSTOM EXCEPTIONS AND SAFE PLAY ===")
+    evening = StrictGamesEvening()
+    wallet = GameCredits(10)
+
+    try:
+        message = evening.safe_play(RacingGame(3), wallet)
+        print(message)
+        print(f"Remaining credits: {wallet.amount}")
+    except (InsufficientCreditsError, InvalidGameError) as error:
+        print(f"Play refused: {error}")
+
+    try:
+        evening.safe_play(RacingGame(10), wallet)
+    except InsufficientCreditsError as error:
+        print(f"Expected refusal: {error}")
+
+
+def demo_a3_json():
+    print("\n=== A3: JSON SAVE AND LOAD ===")
+    evening = GamesEvening()
+    evening.complete_bundle([
+        RacingGame(3),
+        TriviaFromMemory(4),
+        QuickPractice(10),
+        GameChoice("Ludo", 2),
+    ])
+
+    filename = "games_evening_demo.json"
+
+    try:
+        save_evening(evening, filename)
+        restored = load_evening(filename)
+        print("Saved and loaded successfully.")
+        print(restored.summary())
+    finally:
+        Path(filename).unlink(missing_ok=True)
+
+
+def demo_a4_factory():
+    print("\n=== A4: GAME FACTORY ===")
+    games = [
+        GameFactory.create("racing", races=2),
+        GameFactory.create("trivia", questions=5),
+        GameFactory.create("practice", minutes=10),
+        GameFactory.create("basic", name="Ludo", credits=2),
+    ]
+
+    for game in games:
+        print(f"{game} — cost: {game.credit_cost()} credits")
+
+
+# ============================================================
+# MAIN
+# ============================================================
+
 def main():
-    print("=== THE HOSTEL GAMES EVENING ===")
-    print("Achen is running a hostel games evening. The group has limited game credits and many challengers.")
-    choices = [FootballGame(), LudoRound("Ludo round"),
-               FeaturedPractice(), CheeringContest()]
-    show_choices(choices)  # Includes an unrelated duck-typed guest.
-    session = GamesEvening("Achen", 10)
-    other = GamesEvening("Alex", 10)
-    print(session.play(choices[2]))
-    print(session.play(choices[0]))
-    print(session.play(choices[0]))  # Eventually the same request will not fit.
-    print(session.play(choices[3]))
-    print(other.play(choices[1]))
-    print(f"{session.student}: {session.credits.remaining:,} credits; completed: {session.completed_count}")
-    print(f"{other.student}: {other.credits.remaining:,} credits; completed: {other.completed_count}")
-    print("MRO (method lookup order):")
-    for parent in FeaturedPractice.__mro__:
-        print(parent.__name__)
-    print("Ending: Everyone has a turn, and the credit counter still tells the truth.")
+    demo_foundation_tasks()
+    demo_a2_safe_play()
+    demo_a3_json()
+    demo_a4_factory()
 
 
 if __name__ == "__main__":
     main()
+
