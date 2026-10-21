@@ -105,6 +105,61 @@ def affordable(choices, limit):
         game for game in choices
         if isinstance(game, GameChoice) and game.credit_cost() <= limit
     ]
+
+# ============================================================
+# FOUNDATION TASK 5: GamesEvening.summary()
+# FOUNDATION TASK 7: GamesEvening.cancel_last()
+# FOUNDATION TASK 8: GamesEvening.complete_bundle()
+# ============================================================
+
+class GamesEvening:
+    """Organise game choices for the hostel games evening."""
+
+    def __init__(self, title="The Hostel Games Evening"):
+        self.title = title
+        self.choices = []
+        self.history = []
+
+    def add_game(self, game):
+        if not isinstance(game, GameChoice):
+            raise TypeError("Only valid game choices can be added.")
+
+        self.choices.append(game)
+        self.history.append(f"Added: {game.name}")
+
+    def summary(self):
+        total = sum(game.credit_cost() for game in self.choices)
+        names = ", ".join(game.name for game in self.choices)
+
+        if not names:
+            names = "No games selected"
+
+        return (
+            f"{self.title}\n"
+            f"Games: {names}\n"
+            f"Number of games: {len(self.choices)}\n"
+            f"Total credits: {total}"
+        )
+
+    def cancel_last(self):
+        if not self.choices:
+            return None
+
+        removed = self.choices.pop()
+        self.history.append(f"Cancelled: {removed.name}")
+        return removed
+
+    def complete_bundle(self, choices):
+        if not isinstance(choices, (list, tuple)):
+            raise TypeError("Bundle must be a list or tuple.")
+
+        if not all(isinstance(game, GameChoice) for game in choices):
+            raise TypeError("Every bundle item must be a game.")
+
+        self.choices.extend(choices)
+        self.history.append(f"Added bundle of {len(choices)} games")
+        return self.summary()
+
 # ============================================================
 # LATER TOPIC A3: JSON save/load
 # ============================================================
