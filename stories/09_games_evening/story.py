@@ -90,7 +90,21 @@ class TriviaFromMemory(GameChoice):
         self.questions = questions
 
     def credit_cost(self):
-        return self.questions      
+        return self.questions
+        # ============================================================
+# FOUNDATION TASK 4: affordable(choices, limit)
+# ============================================================
+
+def affordable(choices, limit):
+    """Return the games whose costs do not exceed the limit."""
+
+    if not isinstance(limit, int) or isinstance(limit, bool) or limit < 0:
+        raise ValueError("Limit must be a non-negative integer.")
+
+    return [
+        game for game in choices
+        if isinstance(game, GameChoice) and game.credit_cost() <= limit
+    ]
 # ============================================================
 # LATER TOPIC A3: JSON save/load
 # ============================================================
