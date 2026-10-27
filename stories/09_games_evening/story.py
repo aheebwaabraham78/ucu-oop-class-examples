@@ -179,6 +179,41 @@ class QuickPractice(GameChoice):
 
     def credit_cost(self):
         return max(1, (self.minutes + 4) // 5)
+        
+# ============================================================
+# LATER TOPIC A2: Custom exceptions and safe play
+# ============================================================
+
+class InsufficientCreditsError(Exception):
+    """Raised when a player lacks enough credits."""
+
+
+class InvalidGameError(Exception):
+    """Raised when an invalid game is selected."""
+
+
+class StrictGamesEvening(GamesEvening):
+    """Games evening that checks credits before playing."""
+
+    def safe_play(self, game, wallet):
+        if not isinstance(game, GameChoice):
+            raise InvalidGameError("The selected game is invalid.")
+
+        if not isinstance(wallet, GameCredits):
+            raise TypeError("A GameCredits wallet is required.")
+
+        cost = game.credit_cost()
+
+        if wallet.amount < cost:
+            raise InsufficientCreditsError(
+                f"{game.name} costs {cost} credits, "
+                f"but the player has only {wallet.amount}."
+            )
+
+        wallet.spend(cost)
+        self.add_game(game)
+        return game.play()
+
 # ============================================================
 # LATER TOPIC A3: JSON save/load
 # ============================================================
