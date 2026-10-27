@@ -159,7 +159,26 @@ class GamesEvening:
         self.choices.extend(choices)
         self.history.append(f"Added bundle of {len(choices)} games")
         return self.summary()
+# ============================================================
+# FOUNDATION TASK 6: QuickPractice
+# ============================================================
 
+class QuickPractice(GameChoice):
+    """Practice game charged at one credit per five minutes."""
+
+    def __init__(self, minutes):
+        if (
+            not isinstance(minutes, int)
+            or isinstance(minutes, bool)
+            or minutes <= 0
+        ):
+            raise ValueError("Minutes must be a positive integer.")
+
+        super().__init__("Quick Practice")
+        self.minutes = minutes
+
+    def credit_cost(self):
+        return max(1, (self.minutes + 4) // 5)
 # ============================================================
 # LATER TOPIC A3: JSON save/load
 # ============================================================
